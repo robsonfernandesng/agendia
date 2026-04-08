@@ -1,0 +1,8 @@
+{
+  "name": "Agendia",
+  "description": "Um chatbot amigável para agendamento de serviços, focado em simplicidade e facilidade de uso.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}

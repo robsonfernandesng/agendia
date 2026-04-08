@@ -927,14 +927,23 @@ async function setupApp() {
     cron.schedule('* * * * *', checkUpcomingAppointments);
   }
 
-  // Vite middleware for development (Skip on Vercel and Netlify)
+  // Skip Vite entirely in serverless environments (Netlify/Vercel)
   if (!isServerless && process.env.NODE_ENV !== "production") {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    // We avoid 'await import("vite")' directly to prevent bundlers from trying to resolve it in production
+    try {
+      // Use eval/require trick to avoid static bundle detection of vite in Netlify
+      // For local development only
+      const createViteServer = eval('require')('vite').createServer;
+      if (createViteServer) {
+        const vite = await createViteServer({
+          server: { middlewareMode: true },
+          appType: "spa",
+        });
+        app.use(vite.middlewares);
+      }
+    } catch(e) {
+      console.warn("Vite not found or dev server failed to start. Continuing.", e)
+    }
   } else if (!isServerless) {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));

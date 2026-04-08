@@ -926,11 +926,13 @@ async function setupApp() {
   }
 }
 
-// Entry point for local development
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+// Entry point for local development (only if not on Vercel or Netlify)
+const isServerless = process.env.VERCEL || process.env.NETLIFY;
+
+if (!isServerless) {
   setupApp().then(() => {
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running local on http://localhost:${PORT}`);
     });
   });
 }

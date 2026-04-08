@@ -22,8 +22,15 @@ if (publicVapidKey && privateVapidKey) {
   webpush.setVapidDetails('mailto:azotech.az@gmail.com', publicVapidKey, privateVapidKey);
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+let __filename = '';
+let __dirname = '';
+
+if (import.meta && import.meta.url) {
+  __filename = fileURLToPath(import.meta.url);
+  __dirname = path.dirname(__filename);
+} else {
+  __dirname = process.cwd();
+}
 
 try {
   const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT;

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
-import { createServer as createViteServer } from 'vite';
+// import { createServer as createViteServer } from 'vite'; // Removed top-level import
 import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -916,14 +916,15 @@ async function setupApp() {
     cron.schedule('* * * * *', checkUpcomingAppointments);
   }
 
-  // Vite middleware for development (Skip on Vercel)
-  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  // Vite middleware for development (Skip on Vercel and Netlify)
+  if (!isServerless && process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else if (!process.env.VERCEL) {
+  } else if (!isServerless) {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {

@@ -32,27 +32,30 @@ if (import.meta && import.meta.url) {
   __dirname = process.cwd();
 }
 
-try {
-  const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT;
-  const serviceAccountPath = path.join(__dirname, 'firebase-admin.json');
-  
-  if (serviceAccountVar) {
-    const serviceAccount = JSON.parse(serviceAccountVar);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-    console.log('Firebase Admin SDK initialized via environment variable');
-  } else if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-    console.log('Firebase Admin SDK initialized via firebase-admin.json');
-  } else {
-    console.warn('Firebase credentials not found (FIREBASE_SERVICE_ACCOUNT or firebase-admin.json), Native Push notifications disabled');
+// Firebase initialization helper
+function initializeFirebase() {
+  try {
+    if (admin.apps.length > 0) return;
+    
+    const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT;
+    const serviceAccountPath = path.join(process.cwd(), 'firebase-admin.json');
+    
+    if (serviceAccountVar) {
+      const serviceAccount = JSON.parse(serviceAccountVar);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      console.log('Firebase Admin SDK initialized via environment variable');
+    } else if (fs.existsSync(serviceAccountPath)) {
+      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      console.log('Firebase Admin SDK initialized via firebase-admin.json');
+    }
+  } catch (e) {
+    console.warn('Firebase Admin init warning (non-critical):', e);
   }
-} catch (e) {
-  console.error('Error initializing Firebase Admin:', e);
 }
 
 export const app = express();
@@ -182,6 +185,7 @@ export async function initializeDatabase() {
 }
 
 async function setupApp() {
+  initializeFirebase();
   app.use(cors());
   app.use(express.json());
 

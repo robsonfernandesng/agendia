@@ -63,8 +63,9 @@ export async function initializeDatabase() {
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME,
         waitForConnections: true,
-        connectionLimit: 1, // Reduced for serverless
-        queueLimit: 0
+        connectionLimit: 1,
+        queueLimit: 0,
+        connectTimeout: 10000 // 10 seconds timeout
       });
 
       // Create tables if not exist
@@ -176,6 +177,11 @@ export async function initializeDatabase() {
 async function setupApp() {
   app.use(cors());
   app.use(express.json());
+
+  // Test Route (No DB needed)
+  app.get('/api/ping', (req, res) => {
+    res.json({ status: 'ok', msg: 'API is alive!', timestamp: new Date().toISOString() });
+  });
 
   await initializeDatabase();
 
